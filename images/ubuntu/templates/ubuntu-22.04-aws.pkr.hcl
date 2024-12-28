@@ -2,7 +2,7 @@ packer {
   required_plugins {
     amazon = {
       source  = "github.com/hashicorp/amazon"
-      version = "1.0.0"
+      version = "1.3.4"
     }
   }
 }
@@ -46,7 +46,6 @@ variable "image_folder" {
   default = "/imagegeneration"
 }
 
-
 variable "installer_script_folder" {
   type    = string
   default = "/imagegeneration/installers"
@@ -88,12 +87,30 @@ variable "private_ip" {
 }
 
 variable "source_ami" {
-  type    = string
-  default = "ami-0c55b159cbfafe1f0" // Example source AMI for Ubuntu 22.04
+  type = string
+  # ami-0dd45471bbda744a3 is the Ubuntu 22.04, official AWS Marketplace AMI from https://aws.amazon.com/marketplace/pp/prodview-f2if34z3a4e3i
+  default = "${env("SOURCE_AMI")}"
 }
+
+variable "ssh_timeout" {
+  type    = string
+  default = "10m"
+}
+
 variable "ssh_username" {
   type    = string
   default = "ubuntu"
+}
+
+variable "subnet_id" {
+  type    = string
+  default = "${env("SUBNET_ID")}"
+}
+
+variable "temporary_key_pair_type" {
+  description = "Having this be RSA may cause problems, see https://github.com/hashicorp/packer/issues/11733 - thanks @marcosdiez"
+  type        = string
+  default     = "ed25519"
 }
 
 variable "volume_size" {
@@ -106,21 +123,32 @@ variable "volume_type" {
   default = "gp3"
 }
 
+variable "vpc_id" {
+  type    = string
+  default = "${env("VPC_ID")}"
+}
+
 
 source "amazon-ebs" "build_image" {
   ami_name                    = "${local.managed_image_name}"
   ami_description             = "${var.image_os} ${var.image_version} GitHub Actions Runner from actions/runner-images"
   associate_public_ip_address = !var.private_ip
+  communicator                = "ssh"
   instance_type               = "${var.instance_type}"
   region                      = "${var.aws_region}"
   source_ami                  = "${var.source_ami}"
   ssh_username                = "${var.ssh_username}"
+  ssh_timeout                 = "${var.ssh_timeout}"
+  subnet_id                   = "${var.subnet_id}"
   tags                        = var.aws_tags
+  temporary_key_pair_type     = "${var.temporary_key_pair_type}"
+  vpc_id                      = "${var.vpc_id}"
   launch_block_device_mappings {
     device_name = "/dev/sda1"
     encrypted   = true
     iops        = var.iops
     volume_type = "${var.volume_type}"
+    volume_size = var.volume_size
   }
 
 }
