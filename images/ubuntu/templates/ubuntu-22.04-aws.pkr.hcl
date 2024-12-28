@@ -8,7 +8,7 @@ packer {
 }
 
 locals {
-  managed_image_name = var.managed_image_name != "" ? var.managed_image_name : "packer-${var.image_os}-${var.image_version}"
+  managed_image_name = var.managed_image_name != "" ? var.managed_image_name : "packer-${var.image_os}-${var.image_version}-actions-runner"
 }
 
 variable "allowed_inbound_ip_addresses" {
@@ -26,19 +26,60 @@ variable "aws_region" {
   default = "${env("AWS_REGION")}"
 }
 
-variable "source_ami" {
+variable "dockerhub_login" {
   type    = string
-  default = "ami-0c55b159cbfafe1f0" // Example source AMI for Ubuntu 22.04
+  default = "${env("DOCKERHUB_LOGIN")}"
+}
+
+variable "dockerhub_password" {
+  type    = string
+  default = "${env("DOCKERHUB_PASSWORD")}"
+}
+
+variable "helper_script_folder" {
+  type    = string
+  default = "/imagegeneration/helpers"
+}
+
+variable "image_folder" {
+  type    = string
+  default = "/imagegeneration"
+}
+
+
+variable "installer_script_folder" {
+  type    = string
+  default = "/imagegeneration/installers"
 }
 
 variable "instance_type" {
   type    = string
-  default = "m7i-flex.large"
+  default = "m7i-flex.xlarge"
 }
 
-variable "ssh_username" {
+variable "imagedata_file" {
+  type    = string
+  default = "/imagegeneration/imagedata.json"
+}
+
+variable "iops" {
+  type    = number
+  default = 3000
+}
+
+variable "image_os" {
   type    = string
   default = "ubuntu"
+}
+
+variable "image_version" {
+  type    = string
+  default = "22.04"
+}
+
+variable "managed_image_name" {
+  type    = string
+  default = ""
 }
 
 variable "private_ip" {
@@ -46,15 +87,42 @@ variable "private_ip" {
   default = false
 }
 
-source "amazon-ebs" "build_image" {
-  region                         = "${var.aws_region}"
-  source_ami                     = "${var.source_ami}"
-  instance_type                  = "${var.instance_type}"
-  ssh_username                   = "${var.ssh_username}"
-  ami_name                       = "${local.managed_image_name}"
-  associate_public_ip_address    = !var.private_ip
+variable "source_ami" {
+  type    = string
+  default = "ami-0c55b159cbfafe1f0" // Example source AMI for Ubuntu 22.04
+}
+variable "ssh_username" {
+  type    = string
+  default = "ubuntu"
+}
 
-  tags = var.aws_tags
+variable "volume_size" {
+  type    = number
+  default = 75
+}
+
+variable "volume_type" {
+  type    = string
+  default = "gp3"
+}
+
+
+source "amazon-ebs" "build_image" {
+  ami_name                    = "${local.managed_image_name}"
+  ami_description             = "${var.image_os} ${var.image_version} GitHub Actions Runner from actions/runner-images"
+  associate_public_ip_address = !var.private_ip
+  instance_type               = "${var.instance_type}"
+  region                      = "${var.aws_region}"
+  source_ami                  = "${var.source_ami}"
+  ssh_username                = "${var.ssh_username}"
+  tags                        = var.aws_tags
+  launch_block_device_mappings {
+    device_name = "/dev/sda1"
+    encrypted   = true
+    iops        = var.iops
+    volume_type = "${var.volume_type}"
+  }
+
 }
 
 build {
@@ -76,9 +144,9 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}","DEBIAN_FRONTEND=noninteractive"]
+    environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "DEBIAN_FRONTEND=noninteractive"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-    scripts          = [
+    scripts = [
       "${path.root}/../scripts/build/install-ms-repos.sh",
       "${path.root}/../scripts/build/configure-apt-sources.sh",
       "${path.root}/../scripts/build/configure-apt.sh"
@@ -97,7 +165,7 @@ build {
 
   provisioner "file" {
     destination = "${var.image_folder}"
-    sources     = [
+    sources = [
       "${path.root}/../assets/post-gen",
       "${path.root}/../scripts/tests",
       "${path.root}/../scripts/docs-gen"
@@ -116,7 +184,7 @@ build {
 
   provisioner "shell" {
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-    inline          = [
+    inline = [
       "mv ${var.image_folder}/docs-gen ${var.image_folder}/SoftwareReport",
       "mv ${var.image_folder}/post-gen ${var.image_folder}/post-generation"
     ]
@@ -155,7 +223,7 @@ build {
   provisioner "shell" {
     environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}", "DEBIAN_FRONTEND=noninteractive"]
     execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-    scripts          = [
+    scripts = [
       "${path.root}/../scripts/build/install-actions-cache.sh",
       "${path.root}/../scripts/build/install-runner-package.sh",
       "${path.root}/../scripts/build/install-apt-common.sh",
