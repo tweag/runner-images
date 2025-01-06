@@ -8,7 +8,8 @@ packer {
 }
 
 locals {
-  managed_image_name = var.managed_image_name != "" ? var.managed_image_name : "packer-${var.image_os}-${var.image_version}-actions-runner"
+  ts = formatdate("YYYYMMDDHHmmss", timestamp())
+  managed_image_name = var.managed_image_name != "" ? var.managed_image_name : "packer-${var.image_os}-${var.image_version}-actions-runner-${local.ts}"
 }
 
 variable "allowed_inbound_ip_addresses" {
@@ -149,6 +150,10 @@ source "amazon-ebs" "build_image" {
     iops        = var.iops
     volume_type = "${var.volume_type}"
     volume_size = var.volume_size
+  }
+  aws_polling {
+    delay_seconds = 60
+    max_attempts  = 120
   }
 
 }
@@ -392,8 +397,14 @@ build {
   }
 
   provisioner "shell" {
+    environment_vars = ["HELPER_SCRIPT_FOLDER=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
+    execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+    scripts          = ["${path.root}/../scripts/build/clean-aws.sh"]
+  }
+
+  provisioner "shell" {
     execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-    inline          = ["sleep 30", "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"]
+    inline          = ["sleep 30", "export HISTSIZE=0 && sync"]
   }
 
 }
