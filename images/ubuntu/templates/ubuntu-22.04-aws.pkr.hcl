@@ -8,7 +8,7 @@ packer {
 }
 
 locals {
-  ts = formatdate("YYYYMMDDHHmmss", timestamp())
+  ts                 = formatdate("YYYYMMDDHHmmss", timestamp())
   managed_image_name = var.managed_image_name != "" ? var.managed_image_name : "packer-${var.image_os}-${var.image_version}-actions-runner-${local.ts}"
 }
 
@@ -145,11 +145,12 @@ source "amazon-ebs" "build_image" {
   temporary_key_pair_type     = "${var.temporary_key_pair_type}"
   vpc_id                      = "${var.vpc_id}"
   launch_block_device_mappings {
-    device_name = "/dev/sda1"
-    encrypted   = true
-    iops        = var.iops
-    volume_type = "${var.volume_type}"
-    volume_size = var.volume_size
+    device_name           = "/dev/sda1"
+    encrypted             = true
+    iops                  = var.iops
+    volume_type           = "${var.volume_type}"
+    volume_size           = var.volume_size
+    delete_on_termination = true
   }
   aws_polling {
     delay_seconds = 60
