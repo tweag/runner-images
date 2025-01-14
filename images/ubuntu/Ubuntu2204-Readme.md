@@ -6,8 +6,8 @@
 ***
 # Ubuntu 22.04
 - OS Version: 22.04.5 LTS
-- Kernel Version: 6.8.0-1021-aws
-- Image Version: 22.04
+- Kernel Version: 6.5.0-1025-azure
+- Image Version: 20250105.1.0
 - Systemd version: 249.11-0ubuntu3.12
 
 ## Installed Software
@@ -33,7 +33,7 @@
 ### Package Management
 - cpan 1.64
 - Helm 3.16.4
-- Homebrew 4.4.13
+- Homebrew 4.4.14
 - Miniconda 24.11.1
 - Npm 10.8.2
 - NuGet 6.6.1.2
@@ -41,7 +41,7 @@
 - Pip3 22.0.2
 - Pipx 1.7.1
 - RubyGems 3.3.5
-- Vcpkg (build from commit 80d54ff62)
+- Vcpkg (build from commit 65be70199)
 - Yarn 1.22.22
 
 #### Environment variables
@@ -112,8 +112,8 @@ to accomplish this.
 - zstd 1.5.6
 
 ### CLI Tools
-- Alibaba Cloud CLI 3.0.242
-- AWS CLI 2.22.26
+- Alibaba Cloud CLI 3.0.244
+- AWS CLI 2.22.28
 - AWS CLI Session Manager Plugin 1.2.694.0
 - AWS SAM CLI 1.132.0
 - Azure CLI 2.67.0
@@ -121,9 +121,9 @@ to accomplish this.
 - GitHub CLI 2.64.0
 - Google Cloud CLI 504.0.1
 - Netlify CLI 17.38.1
-- OpenShift CLI 4.17.9
+- OpenShift CLI 4.17.10
 - ORAS CLI 1.2.2
-- Vercel CLI 39.2.2
+- Vercel CLI 39.2.5
 
 ### Java
 | Version             | Environment Variable |
@@ -142,9 +142,9 @@ Both Xdebug and PCOV extensions are installed, but only Xdebug is enabled.
 ```
 
 ### Haskell Tools
-- Cabal 3.14.1.0
+- Cabal 3.14.1.1
 - GHC 9.12.1
-- GHCup 0.1.30.0
+- GHCup 0.1.40.0
 - Stack 3.3.1
 
 ### Rust Tools
@@ -220,7 +220,6 @@ Use the following command as a part of your job to start the service: 'sudo syst
 - 22.12.0
 
 #### Python
-- 3.7.17
 - 3.8.18
 - 3.9.21
 - 3.10.16
@@ -388,3 +387,4 @@ Use the following command as a part of your job to start the service: 'sudo syst
 | xz-utils               | 5.2.5-2ubuntu1                      |
 | zip                    | 3.0-12build2                        |
 | zsync                  | 0.6.2-3ubuntu1                      |
+
