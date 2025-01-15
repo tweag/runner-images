@@ -397,3 +397,6 @@ launch.json
 
 # Ignore dynamic template
 images/*/*-temp.json
+
+# Ignore packer output
+software-report.json
